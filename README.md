@@ -14,7 +14,7 @@ Tier 2 : 結構複雜且無js動態生成網頁
       1 : 每部美劇每一季觀眾review的url -- tomato_url.py
  
 Tier 3 : 結構簡單且有js動態生成網頁
-      
+
       1 : 591租屋網捷運搜尋結果 -- ts591.py
  
 Tier 4 : 結構複雜且有js動態生成頁面
