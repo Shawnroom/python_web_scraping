@@ -26,10 +26,12 @@ def request_all():
     return request_all_url
     
 def url_info(request_all_url):
+    hdr = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36','Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+       'Connection': 'keep-alive'}
     
     scraped_data = []    
     for each in request_all_url:
-        res = requests.get(each)
+        res = requests.get(each,headers=hdr)
         data = json.loads(res.text)
         lenth = len(data['data']['data'])
         for i in range(0,lenth):
@@ -47,7 +49,7 @@ def url_info(request_all_url):
             dict591['nearby_dis'] = location['distance']
             dict591['broker'] = location['nick_name']
             
-            q = pq(dict591['house_url'])
+            q = pq(dict591['house_url'],headers=hdr)
             dict591['no_item'] = q('.no').parent('li').text()
             
             scraped_data.append(dict591)
@@ -57,7 +59,7 @@ def url_info(request_all_url):
 if __name__ == '__main__':
     now = datetime.now()
     
-    builtwith('xxxx')
+    #builtwith('xxxx')
     
     request_all_url = request_all()
     data_all = url_info(request_all_url)
