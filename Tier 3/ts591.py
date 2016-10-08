@@ -8,6 +8,7 @@ import requests
 import re
 from pyquery import PyQuery as pq
 import pymysql
+import builtwith
 
 def request_all():
     
@@ -55,6 +56,8 @@ def url_info(request_all_url):
     
 if __name__ == '__main__':
     now = datetime.now()
+    
+    builtwith('xxxx')
     
     request_all_url = request_all()
     data_all = url_info(request_all_url)
