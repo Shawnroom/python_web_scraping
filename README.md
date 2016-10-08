@@ -1,7 +1,7 @@
 # python_web_scraping
 Python 爬蟲專區
 
-網頁爬蟲難度（由易到難）
+網頁爬蟲難度
 
 Tier 1 : 結構簡單且無js動態生成網頁
 
