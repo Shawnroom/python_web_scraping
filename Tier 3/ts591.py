@@ -59,8 +59,6 @@ def url_info(request_all_url):
 if __name__ == '__main__':
     now = datetime.now()
     
-    #builtwith('xxxx')
-    
     request_all_url = request_all()
     data_all = url_info(request_all_url)
     
@@ -73,5 +71,7 @@ if __name__ == '__main__':
     conn= pymysql.connect(host='localhost', port=3306,user='root',passwd='',db ='life',charset='utf8')
     df.to_sql(con=conn, name='rent591', if_exists='replace', flavor='mysql')
     conn.close()
+    
+    builtwith('https://rent.591.com.tw/new/')
         
         
