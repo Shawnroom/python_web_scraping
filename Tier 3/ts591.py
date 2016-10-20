@@ -10,7 +10,7 @@ from pyquery import PyQuery as pq
 import pymysql
 
 def all_mrtcode():
-    
+    #爬取所有捷運站名稱與對應代碼
     request_url = 'https://rent.591.com.tw/static/public/list/mapsubway.js?v=de6935c65f' 
     res = requests.get(request_url)
     text = res.text
@@ -29,7 +29,7 @@ def all_mrtcode():
     return station_df
 
 def get_mrt_code(station_df):
-    
+    #給定捷運站名稱,自動找出代碼
     station_name = "頂溪站,永安市場"
     
     station_want = []    
@@ -50,7 +50,7 @@ def get_mrt_code(station_df):
     return code_final
 
 def request_all(code_final):
-    
+    #給定代碼,爬取相對應頁數
     request_url = 'https://rent.591.com.tw/home/search/rsList?is_new_list=1&type=1&kind=0&searchtype=4&region=3&mrt=1&mrtcoods='+str(code_final)+'&kind=1&rentprice=10000,20000'
     res = requests.get(request_url)
     data = json.loads(res.text)
@@ -65,6 +65,7 @@ def request_all(code_final):
     return request_all_url
     
 def url_info(request_all_url):
+    #爬取網頁內容
     hdr = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36','Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
        'Connection': 'keep-alive'}
     
