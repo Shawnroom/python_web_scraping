@@ -8,11 +8,50 @@ import requests
 import re
 from pyquery import PyQuery as pq
 import pymysql
-import builtwith
 
-def request_all():
+def all_mrtcode():
     
-    request_url = 'https://rent.591.com.tw/home/search/rsList?is_new_list=1&type=1&kind=0&searchtype=4&region=3&mrt=1&mrtcoods=4231,4232&kind=1&rentprice=10000,20000'
+    request_url = 'https://rent.591.com.tw/static/public/list/mapsubway.js?v=de6935c65f' 
+    res = requests.get(request_url)
+    text = res.text
+    pattern = re.compile(r'''[name\":]+
+        (?P<name>[\u4e00-\u9fa5]+)\"[^d]+[d\":]+
+        (?P<code>[\d]+)        
+        ''',re.X)
+        
+    list_station = [] 
+    
+    for match in pattern.finditer(text):
+        list_station.append(match.groupdict())
+        
+    station_df = pd.DataFrame(list_station)
+    
+    return station_df
+
+def get_mrt_code(station_df):
+    
+    station_name = "頂溪站,永安市場"
+    
+    station_want = []    
+    for each in station_name.split(','):
+        station_want.append(each)
+        
+    code_list = []    
+    for every in station_want:
+        try:        
+            want = station_df[station_df.name == every]
+            code = int(want.code)
+            code_list.append(str(code))
+        except:
+            print('查無此捷運站名稱')
+
+        code_final = ','.join(code_list)
+        
+    return code_final
+
+def request_all(code_final):
+    
+    request_url = 'https://rent.591.com.tw/home/search/rsList?is_new_list=1&type=1&kind=0&searchtype=4&region=3&mrt=1&mrtcoods='+str(code_final)+'&kind=1&rentprice=10000,20000'
     res = requests.get(request_url)
     data = json.loads(res.text)
     limit = int(data['records'])
@@ -49,8 +88,8 @@ def url_info(request_all_url):
             dict591['nearby_dis'] = location['distance']
             dict591['broker'] = location['nick_name']
             
-            q = pq(dict591['house_url'],headers=hdr)
-            dict591['no_item'] = q('.no').parent('li').text()
+            #q = pq(dict591['house_url'],headers=hdr)
+            #dict591['no_item'] = q('.no').parent('li').text()
             
             scraped_data.append(dict591)
         
@@ -58,8 +97,10 @@ def url_info(request_all_url):
     
 if __name__ == '__main__':
     now = datetime.now()
+    station_df = all_mrtcode()
+    code_final = get_mrt_code(station_df)
     
-    request_all_url = request_all()
+    request_all_url = request_all(code_final)
     data_all = url_info(request_all_url)
     
     later = datetime.now()
@@ -72,6 +113,5 @@ if __name__ == '__main__':
     df.to_sql(con=conn, name='rent591', if_exists='replace', flavor='mysql')
     conn.close()
     
-    builtwith('https://rent.591.com.tw/new/')
         
         
