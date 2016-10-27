@@ -81,24 +81,25 @@ def url_info(request_all_url):
         for i in range(0,lenth):
             dict591 = OrderedDict()
             location = data['data']['data'][i]
+            match_room = re.match(r'(?P<room>[\d])\D(?P<livingroom>[\d])\D(?P<toilet>[\d])',location['layout'])
+            try:
+                dict591['rooms'] = int(match_room.groupdict()['room'])
+                dict591['livingroom'] = match_room.groupdict()['livingroom']
+                dict591['toilet'] = match_room.groupdict()['toilet']
+            except:
+                continue
+            
             dict591['time'] = location['ltime'].split(' ')[0]
             dict591['house_url'] = 'https://rent.591.com.tw/rent-detail-' + str(location['houseid']) + '.html'
             dict591['floor'] = location['floorInfo'].split("：")[1].split("/")[0]
             dict591['ping'] = location['area']
             dict591['title'] = location['address_img_title']
-            dict591['address'] = location['section_name'] + location['street_name'] + location['alley_name']
-            match_room = re.match(r'(?P<room>[\d])\D(?P<livingroom>[\d])\D(?P<toilet>[\d])',location['layout'])
-            dict591['rooms'] = int(match_room.groupdict()['room'])
-            dict591['livingroom'] = match_room.groupdict()['livingroom']
-            dict591['toilet'] = match_room.groupdict()['toilet']
+            dict591['address'] = location['section_name'] + location['street_name'] + location['alley_name']            
             dict591['post_time'] = location['posttime']
             dict591['price'] = location['price']
             dict591['nearby'] = location['search_name']
             dict591['nearby_dis'] = location['distance']
             dict591['broker'] = location['nick_name'].split(' ')[0]
-            
-            #q = pq(dict591['house_url'],headers=hdr)
-            #dict591['no_item'] = q('.no').parent('li').text()
             
             scraped_data.append(dict591)
         
@@ -113,9 +114,27 @@ def clean_dataframe(df):
     df = df[df.floor != "頂樓加蓋"]
     df = df[df.rooms > 1]
     df = df[df.ping > 15]
+    df = df.reset_index(drop=True)
     
     return df     
+
+def get_no_item(df):
+    no_item_list = []
+    amount_list = []
+    for each in final_df.house_url:
+        q = pq(each)
+        no_item = q('.no').parent('li').text()
+        no_item_list.append(no_item)
+        amount = len(no_item.split(' '))
+        amount_list.append(amount)
+        
+    s1 = pd.Series(no_item_list, name='no_item')
+    s2 = pd.Series(amount_list, name='no_item_amount')  
+    s3 = pd.concat([s1, s2], axis=1)
     
+    return s3
+            
+
 if __name__ == '__main__':
     now = datetime.now()
     station_df = all_mrtcode()
@@ -130,8 +149,13 @@ if __name__ == '__main__':
     
     df = pd.DataFrame(data_all)
     final_df = clean_dataframe(df)
-    final_df = final_df[['title','address','house_url','price','rooms','toilet','nearby','nearby_dis','ping','floor']]
-    final_df.to_html(r'C:\Users\GN1504301\Desktop\ts591.html',index=False)
+    s3 = get_no_item(final_df)
+    result_df = pd.concat([final_df, s3], axis=1, join_axes=[final_df.index])
+    result_df = result_df[result_df.no_item_amount <= 5 ]
+
+    result_df = result_df[['title','address','house_url','price','rooms','toilet','nearby','nearby_dis','ping','floor','no_item','no_item_amount']]
+    result_df = result_df.sort_values(by='price')
+    result_df.to_html(r'C:\Users\GN1504301\Desktop\ts591.html',index=False)
     
     
     
