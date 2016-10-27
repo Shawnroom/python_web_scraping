@@ -155,7 +155,7 @@ if __name__ == '__main__':
 
     result_df = result_df[['title','address','house_url','price','rooms','toilet','nearby','nearby_dis','ping','floor','no_item','no_item_amount']]
     result_df = result_df.sort_values(by='price')
-    result_df.to_html(r'E:\GitHub\web_page\ts591\ts591.html',index=False)
+    result_df.to_html(r'E:\GitHub\python_web_scraping\Tier 3\ts591.html',index=False)
     
     
     
