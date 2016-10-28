@@ -32,7 +32,7 @@ def all_mrtcode():
 
 def get_mrt_code(station_df):
     #給定捷運站名稱,自動找出代碼
-    station_name = "古亭站,中正紀念堂,東門站,大安森林公園,大安站,科技大樓,六張犁站,萬芳醫院"
+    station_name = "古亭站,中正紀念堂,東門站,大安森林公園,大安站,科技大樓,六張犁站,萬芳醫院,台電大樓,頂溪站,永安市場"
     
     station_want = []    
     for each in station_name.split(','):
@@ -75,7 +75,7 @@ def url_info(request_all_url):
     scraped_data = []    
     for each in request_all_url:
         res = requests.get(each,headers=hdr)
-        time.sleep(3)
+        time.sleep(2)
         data = json.loads(res.text)
         lenth = len(data['data']['data'])
         for i in range(0,lenth):
@@ -119,14 +119,23 @@ def clean_dataframe(df):
     return df     
 
 def get_no_item(df):
+    hdr = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36','Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+       'Connection': 'keep-alive'}
     no_item_list = []
     amount_list = []
+    n = 0
     for each in final_df.house_url:
-        q = pq(each)
-        no_item = q('.no').parent('li').text()
-        no_item_list.append(no_item)
-        amount = len(no_item.split(' '))
-        amount_list.append(amount)
+        try:
+            q = pq(each,headers=hdr)
+            no_item = q('.no').parent('li').text()
+            no_item_list.append(no_item)
+            amount = len(no_item.split(' '))
+            amount_list.append(amount)
+            time.sleep(2)
+        except:
+            n += 1
+            print(each,'is not available  total:',n)
+            continue
         
     s1 = pd.Series(no_item_list, name='no_item')
     s2 = pd.Series(amount_list, name='no_item_amount')  
@@ -145,7 +154,6 @@ if __name__ == '__main__':
     
     later = datetime.now()
     diff = later - now
-    print('總共花費',str(round(diff.seconds/60.0,2)),'分鐘') 
     
     df = pd.DataFrame(data_all)
     final_df = clean_dataframe(df)
@@ -156,6 +164,8 @@ if __name__ == '__main__':
     result_df = result_df[['title','address','house_url','price','rooms','toilet','nearby','nearby_dis','ping','floor','no_item','no_item_amount']]
     result_df = result_df.sort_values(by='price')
     result_df.to_html(r'E:\GitHub\python_web_scraping\Tier 3\ts591.html',index=False)
+    
+    print('總共花費',str(round(diff.seconds/60.0,2)),'分鐘') 
     
     
     
