@@ -32,7 +32,7 @@ def all_mrtcode():
 
 def get_mrt_code(station_df):
     #給定捷運站名稱,自動找出代碼
-    station_name = "古亭站,中正紀念堂,東門站,大安森林公園,大安站,科技大樓,六張犁站,萬芳醫院,台電大樓,頂溪站,永安市場"
+    station_name = "古亭站,大安站,六張犁站,頂溪站,永安市場,景安站,景美站,七張站,麟光站,辛亥站"
     
     station_want = []    
     for each in station_name.split(','):
@@ -54,7 +54,7 @@ def get_mrt_code(station_df):
 
 def request_all(code_final):
     #給定代碼,爬取相對應頁數
-    request_url = 'https://rent.591.com.tw/home/search/rsList?is_new_list=1&type=1&kind=0&searchtype=4&region=3&mrt=1&mrtcoods='+str(code_final)+'&kind=1&rentprice=10000,24000'
+    request_url = 'https://rent.591.com.tw/home/search/rsList?is_new_list=1&type=1&kind=0&searchtype=4&region=3&mrt=1&mrtcoods='+str(code_final)+'&kind=1&rentprice=10000,20000'
     res = requests.get(request_url)
     data = json.loads(res.text)
     limit = int(data['records'])
@@ -100,6 +100,7 @@ def url_info(request_all_url):
             dict591['nearby'] = location['search_name']
             dict591['nearby_dis'] = location['distance']
             dict591['broker'] = location['nick_name'].split(' ')[0]
+            dict591['photoNum'] = int(location['photoNum'])
             
             scraped_data.append(dict591)
         
@@ -114,6 +115,7 @@ def clean_dataframe(df):
     df = df[df.floor != "頂樓加蓋"]
     df = df[df.rooms > 1]
     df = df[df.ping > 15]
+    df = df[df.photoNum > 2]
     df = df.reset_index(drop=True)
     
     return df     
@@ -121,29 +123,39 @@ def clean_dataframe(df):
 def get_no_item(df):
     hdr = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36','Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
        'Connection': 'keep-alive'}
-    no_item_list = []
-    amount_list = []
+       
+    no_list = []
     n = 0
     for each in final_df.house_url:
         try:
+            no_dict = {}
             q = pq(each,headers=hdr)
-            no_item = q('.no').parent('li').text()
-            no_item_list.append(no_item)
-            amount = len(no_item.split(' '))
-            amount_list.append(amount)
+            no_dict['balcony'] = int(''.join(re.findall(r'[\d]+',q('div.detailInfo.clearfix > ul > li:nth-child(1)').text().split('衛')[1])))
+            no_dict['no_item'] = q('.no').parent('li').text()     
+            no_dict['amount'] = len(no_dict['no_item'].split(' '))
+            facility = q('.facility.clearfix').text()
+            no_dict['facility_len'] = len(facility)
+
+            no_list.append(no_dict)
             time.sleep(2)
         except:
             n += 1
             print(each,'is not available  total:',n)
             continue
         
-    s1 = pd.Series(no_item_list, name='no_item')
-    s2 = pd.Series(amount_list, name='no_item_amount')  
-    s3 = pd.concat([s1, s2], axis=1)
+    no_df = pd.DataFrame(no_list)
     
-    return s3
-            
-
+    return no_df
+    
+def last_clean(result_df):
+    result_df = result_df[result_df.amount < 6 ]
+    result_df = result_df[result_df.balcony > 0 ]
+    result_df = result_df[result_df.facility_len > 3]
+    result_df = result_df[['title','address','house_url','price','rooms','balcony','nearby','nearby_dis','ping','floor','no_item','amount']]
+    result_df2 = result_df.sort_values(by='price')
+    
+    return result_df2
+    
 if __name__ == '__main__':
     now = datetime.now()
     station_df = all_mrtcode()
@@ -157,13 +169,12 @@ if __name__ == '__main__':
     
     df = pd.DataFrame(data_all)
     final_df = clean_dataframe(df)
-    s3 = get_no_item(final_df)
-    result_df = pd.concat([final_df, s3], axis=1, join_axes=[final_df.index])
-    result_df = result_df[result_df.no_item_amount <= 5 ]
-
-    result_df = result_df[['title','address','house_url','price','rooms','toilet','nearby','nearby_dis','ping','floor','no_item','no_item_amount']]
-    result_df = result_df.sort_values(by='price')
-    result_df.to_html(r'E:\GitHub\python_web_scraping\Tier 3\ts591.html',index=False)
+    no_df = get_no_item(final_df)
+    result_df = pd.concat([final_df, no_df], axis=1, join_axes=[final_df.index])
+    
+    result_df2 = last_clean(result_df)
+    
+    result_df2.to_html(r'E:\GitHub\python_web_scraping\Tier 3\ts591.html',index=False)
     
     print('總共花費',str(round(diff.seconds/60.0,2)),'分鐘') 
     
