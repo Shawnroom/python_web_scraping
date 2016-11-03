@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime,timedelta
+from datetime import datetime,timedelta,date
 from collections import OrderedDict
 import pandas as pd
 import json
@@ -151,8 +151,12 @@ def last_clean(result_df):
     result_df = result_df[result_df.amount < 6 ]
     result_df = result_df[result_df.balcony > 0 ]
     result_df = result_df[result_df.facility_len > 3]
-    result_df = result_df[['title','address','house_url','price','rooms','balcony','nearby','nearby_dis','ping','floor','no_item','amount']]
+    result_df = result_df[['title','address','house_url','price','nearby','nearby_dis','ping','floor','no_item']]
+    result_df = result_df.rename(columns={'title':"標題",'address':"地址","house_url":"網址","nearby":"捷運站","nearby_dis":"距離捷運站","ping":"坪數","floor":"樓層","no_item":"未配備家電"})
     result_df2 = result_df.sort_values(by='price')
+    result_df2 = result_df2.reset_index(drop=True)
+    parse_date =  date.today()
+    result_df2['parse_date'] = parse_date
     
     return result_df2
     
@@ -175,6 +179,7 @@ if __name__ == '__main__':
     result_df2 = last_clean(result_df)
     
     result_df2.to_html(r'E:\GitHub\python_web_scraping\Tier 3\ts591.html',index=False)
+    result_df2.to_csv(r'C:\Users\GN1504301\Desktop\ts591.csv')
     
     print('總共花費',str(round(diff.seconds/60.0,2)),'分鐘') 
     
