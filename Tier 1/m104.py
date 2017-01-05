@@ -95,4 +95,4 @@ if __name__ == '__main__':
     diff = later - now
     print('總共爬取',n,'個案子，花費',str(round(diff.seconds/60.0,2)),'分鐘') 
        
-    final_df.to_csv(r'E:\IpythonNotebook\真104\m_1028.csv',encoding='utf-8',index=None)
+    final_df.to_csv(r'E:\IpythonNotebook\真104\m_1226.csv',encoding='utf-8',index=None)

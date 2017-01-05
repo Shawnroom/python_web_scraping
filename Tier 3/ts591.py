@@ -3,6 +3,7 @@
 from datetime import datetime,timedelta,date
 from collections import OrderedDict
 import pandas as pd
+import numpy as np
 import json
 import requests
 import re
@@ -32,7 +33,8 @@ def all_mrtcode():
 
 def get_mrt_code(station_df):
     #給定捷運站名稱,自動找出代碼
-    station_name = "古亭站,大安站,六張犁站,頂溪站,永安市場,景安站,景美站,七張站,麟光站,辛亥站"
+    station_name = "古亭站,大安站,六張犁站,頂溪站,永安市場,萬隆站,科技大樓,中正紀念堂"
+    #永安市場,七張站,麟光站,辛亥站
     
     station_want = []    
     for each in station_name.split(','):
@@ -54,7 +56,7 @@ def get_mrt_code(station_df):
 
 def request_all(code_final):
     #給定代碼,爬取相對應頁數
-    request_url = 'https://rent.591.com.tw/home/search/rsList?is_new_list=1&type=1&kind=0&searchtype=4&region=3&mrt=1&mrtcoods='+str(code_final)+'&kind=1&rentprice=10000,20000'
+    request_url = 'https://rent.591.com.tw/home/search/rsList?is_new_list=1&type=1&kind=0&searchtype=4&region=3&mrt=1&mrtcoods='+str(code_final)+'&kind=1&rentprice=10000,25000'
     res = requests.get(request_url)
     data = json.loads(res.text)
     limit = int(data['records'])
@@ -113,6 +115,7 @@ def clean_dataframe(df):
     df = df[df.nearby_dis < 800] 
     df = df[df.broker != "仲介"]
     df = df[df.floor != "頂樓加蓋"]
+    df = df[df.floor != "B1"]
     df = df[df.rooms > 1]
     df = df[df.ping > 15]
     df = df[df.photoNum > 2]
@@ -177,9 +180,8 @@ if __name__ == '__main__':
     result_df = pd.concat([final_df, no_df], axis=1, join_axes=[final_df.index])
     
     result_df2 = last_clean(result_df)
-    
-    result_df2.to_html(r'E:\GitHub\python_web_scraping\Tier 3\ts591.html',index=False)
     result_df2.to_csv(r'C:\Users\GN1504301\Desktop\ts591.csv')
+    
     
     print('總共花費',str(round(diff.seconds/60.0,2)),'分鐘') 
     
