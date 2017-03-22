@@ -10,7 +10,7 @@ import pymysql
 
 def find_page():
     #找出總共有幾頁
-    page_domain = 'https://www.104.com.tw/jobbank/joblist/joblist.cfm?jobsource=n104bank1&ro=0&keyword=資料分析&order=1&asc=0&page='
+    page_domain = 'https://www.104.com.tw/jobbank/joblist/joblist.cfm?jobsource=n104bank1&ro=0&keyword=資料科學&order=1&asc=0&page='
     page_url = page_domain + str(2) + '&psl=N_B'
     q = pq(page_url)
     page_total = int(''.join(re.findall(r'[\d]+',q('.next_page #loadDone_3').text().split('，')[1])))
@@ -95,4 +95,4 @@ if __name__ == '__main__':
     diff = later - now
     print('總共爬取',n,'個案子，花費',str(round(diff.seconds/60.0,2)),'分鐘') 
        
-    final_df.to_csv(r'E:\IpythonNotebook\真104\m_1226.csv',encoding='utf-8',index=None)
+    final_df.to_csv(r'E:\IpythonNotebook\真104\m_0106.csv',encoding='utf-8',index=None)
